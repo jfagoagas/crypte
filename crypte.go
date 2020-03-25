@@ -2,8 +2,6 @@ package main
 
 // incluir los errores en las devoluciones de las funciones
 
-// secretbox -- symmetric
-// box -- asymmetric
 import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
@@ -17,46 +15,46 @@ import (
 )
 
 var (
-	keys    = flag.Bool("k", false, "Pub/Priv Key pair generator")
-	cryp    = flag.Bool("e", false, "Crypt message")
-	decryp  = flag.Bool("d", false, "Decrypt message")
-	pK      = flag.String("p", "", "Public Key File")
-	sK      = flag.String("s", "", "Private Key File")
-	m       = flag.String("m", "", "Ecrypted message")
-	pubKey  nacl.Key
-	privKey nacl.Key
-	enc     []byte
+	keys       = flag.Bool("k", false, "Pub/Priv Key pair generator")
+	enc        = flag.Bool("e", false, "Encrypt message")
+	dec        = flag.Bool("d", false, "Decrypt message")
+	publicKey  = flag.String("p", "", "Public Key File")
+	privateKey = flag.String("s", "", "Private Key File")
+	msg        = flag.String("m", "", "Message to encrypt/decrypt")
 )
 
 func main() {
 	// Flags config
 	flag.Usage = usage
 	flag.Parse()
-    usage()
+    //	usage()
+
 	// Public/Private keys generation
 	if *keys {
 		pubKey, privKey, err := genKeys()
 		if err != nil {
 			panic(err)
-		}
-		fmt.Printf("Public Key: %s\n", base64.StdEncoding.EncodeToString([]byte(pubKey[:])))
-		fmt.Printf("Private Key: %s\n", base64.StdEncoding.EncodeToString([]byte(privKey[:])))
-
-		if !(writeKeyToFile(pubKey, "publicKey")) {
-			fmt.Printf("Can not write Public Key")
-		}
-
-		if !(writeKeyToFile(privKey, "privateKey")) {
-			fmt.Printf("Can not write Private Key")
+		} else {
+			fmt.Println("Created Public/Private Key")
+			fmt.Printf("Public Key: %s\n", base64.StdEncoding.EncodeToString([]byte(pubKey[:])))
+			fmt.Printf("Private Key: %s\n", base64.StdEncoding.EncodeToString([]byte(privKey[:])))
+			// Write keys to file
+			if !(writeKeyToFile(pubKey, "publicKey")) {
+				fmt.Printf("Can not write Public Key")
+			}
+			if !(writeKeyToFile(privKey, "privateKey")) {
+				fmt.Printf("Can not write Private Key")
+			}
 		}
 	}
-	msg := "The quick brown fox jumps over the lazy dog"
-	if *cryp {
-		enc = crypt(*pK, *sK, msg)
+	// Encrypt message
+	//msg := "The quick brown fox jumps over the lazy dog"
+	if *enc {
+		encrypt(*publicKey, *privateKey, *msg)
 	}
-
-	if *decryp {
-		decrypt(*pK, *sK, *m)
+	// Decrypt message
+	if *dec {
+		decrypt(*publicKey, *privateKey, *msg)
 	}
 }
 
@@ -73,12 +71,13 @@ func usage() {
 }
 
 func readFile(f string) []byte {
+	// Open file
 	file, err := os.Open(f)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
-
+	// Read file
 	b, err := ioutil.ReadAll(file)
 	return b
 
@@ -108,32 +107,35 @@ func writeKeyToFile(k nacl.Key, n string) (ok bool) {
 	return
 }
 
-func genKeys() (pubKey, privKey nacl.Key, err error) {
-	pubKey, privKey, err = box.GenerateKey(crypto_rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Pub/Priv key pair created!")
+func genKeys() (publicKey, privateKey nacl.Key, err error) {
+	// Generate Public/Private Keys
+	publicKey, privateKey, err = box.GenerateKey(crypto_rand.Reader)
 	return
 }
 
-func crypt(p, k string, m string) []byte {
+func encrypt(publicKey, privateKey, message string) {
 	/*
 		var nonce [24]byte
 		if _, err := io.ReadFull(crypto_rand.Reader, nonce[:]); err != nil {
 			panic(err)
 		}
 	*/
+	// Random nonce
 	nonce := nacl.NewNonce()
-	fmt.Printf("Nonce: %s\n", base64.StdEncoding.EncodeToString([]byte(nonce[:])))
-	fmt.Printf("Decrypted message: %s\n", m)
-	pKey := readFile(p)
+	//fmt.Printf("Nonce: %s\n", base64.StdEncoding.EncodeToString([]byte(nonce[:])))
+
+	fmt.Printf("Decrypted message: %s\n", message)
+	// Read Public Key
+	p := readFile(publicKey)
 	pk := new([nacl.KeySize]byte)
-	copy(pk[:], pKey)
-	sKey := readFile(k)
+
+	// Read Private Key
+	s := readFile(privateKey)
 	sk := new([nacl.KeySize]byte)
-	copy(sk[:], sKey)
-	//fmt.Printf("%T\n", pKey)
+
+	// Transform keys from type []byte to nacl.Key
+	copy(pk[:], p)
+	copy(sk[:], s)
 	/*
 		    a, err := nacl.Load(string(pKey))
 		    if err != nil {
@@ -144,10 +146,11 @@ func crypt(p, k string, m string) []byte {
 		    b, _ := nacl.Load(string(sKey))
 		    fmt.Println(base64.StdEncoding.EncodeToString(b[:]))
 	*/
+	// Encrypt message
 	var out []byte
-	enc := box.Seal(out, []byte(m), nonce, pk, sk)
+	enc := box.Seal(out, []byte(message), nonce, pk, sk)
+	// Print crypted message
 	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
-	return enc
 }
 
 func decrypt(p, k, m string) {
