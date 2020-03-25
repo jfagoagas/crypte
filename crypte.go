@@ -28,12 +28,12 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
     //	usage()
-
+    // fmt.Printf("\nERROR - Must complete all input params\n")
 	// Public/Private keys generation
 	if *keys {
 		pubKey, privKey, err := genKeys()
 		if err != nil {
-			panic(err)
+            log.Fatal(err)
 		} else {
 			fmt.Println("Created Public/Private Key")
 			fmt.Printf("Public Key: %s\n", base64.StdEncoding.EncodeToString([]byte(pubKey[:])))
@@ -59,7 +59,6 @@ func main() {
 }
 
 func usage() {
-	fmt.Printf("\nERROR - Must complete all input params\n")
 	fmt.Printf("\nUsage:\n")
 	fmt.Println("- Generate Public/Private Keys:")
 	fmt.Printf("%s -k\n", os.Args[0])
@@ -120,56 +119,49 @@ func encrypt(publicKey, privateKey, message string) {
 			panic(err)
 		}
 	*/
-	// Random nonce
+
+	// Random nonce (var nonce [24]byte)
 	nonce := nacl.NewNonce()
 	//fmt.Printf("Nonce: %s\n", base64.StdEncoding.EncodeToString([]byte(nonce[:])))
 
-	fmt.Printf("Decrypted message: %s\n", message)
 	// Read Public Key
-	p := readFile(publicKey)
-	pk := new([nacl.KeySize]byte)
-
+    pk := readKeyFile(publicKey)
 	// Read Private Key
-	s := readFile(privateKey)
-	sk := new([nacl.KeySize]byte)
+    sk := readKeyFile(privateKey)
 
-	// Transform keys from type []byte to nacl.Key
-	copy(pk[:], p)
-	copy(sk[:], s)
-	/*
-		    a, err := nacl.Load(string(pKey))
-		    if err != nil {
-			    fmt.Println("Can not load public key")
-		    }
-		    fmt.Println(a)
-		    sKey := readFile(k)
-		    b, _ := nacl.Load(string(sKey))
-		    fmt.Println(base64.StdEncoding.EncodeToString(b[:]))
-	*/
 	// Encrypt message
 	var out []byte
 	enc := box.Seal(out, []byte(message), nonce, pk, sk)
-	// Print crypted message
+	// Print crypted message (b64 encoding)
+    fmt.Printf("Decrypted message: %s\n", message)
 	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
 }
 
-func decrypt(p, k, m string) {
-	// Read public key from file
-	pKey := readFile(p)
-	pk := new([nacl.KeySize]byte)
-	copy(pk[:], pKey)
-	// Read private key from file
-	sKey := readFile(k)
-	sk := new([nacl.KeySize]byte)
-	copy(sk[:], sKey)
-	/*
+func decrypt(publicKey, privateKey, message string) {
+	/* If box.Open
 		var decNonce [24]byte
 		copy(decNonce[:], e[:24])
 	*/
-	msg, err := base64.StdEncoding.DecodeString(m)
+
+    // Read Public Key
+    pk := readKeyFile(publicKey)
+    // Read Private Key
+    sk := readKeyFile(privateKey)
+    // Decode message
+	msg, err := base64.StdEncoding.DecodeString(message)
+    // Decrypt message
 	dec, err := box.EasyOpen([]byte(msg), pk, sk)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Decrypted message: %s\n", base64.StdEncoding.EncodeToString(dec))
+}
+
+func readKeyFile (file string) (nacl.Key) {
+    // Read key
+    f := readFile(file)
+    // Transform keys from type []byte to nacl.Key
+    key := new([nacl.KeySize]byte)
+    copy(key[:], f)
+    return key
 }
