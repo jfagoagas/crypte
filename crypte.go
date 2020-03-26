@@ -27,34 +27,44 @@ func main() {
 	// Flags config
 	flag.Usage = usage
 	flag.Parse()
-    //	usage()
-    // fmt.Printf("\nERROR - Must complete all input params\n")
+	//	usage()
+	// fmt.Printf("\nERROR - Must complete all input params\n")
 	// Public/Private keys generation
 	if *keys {
 		pubKey, privKey, err := genKeys()
 		if err != nil {
-            log.Fatal(err)
+			log.Fatal(err)
 		} else {
 			fmt.Println("Created Public/Private Key")
 			fmt.Printf("Public Key: %s\n", base64.StdEncoding.EncodeToString([]byte(pubKey[:])))
 			fmt.Printf("Private Key: %s\n", base64.StdEncoding.EncodeToString([]byte(privKey[:])))
 			// Write keys to file
-			if !(writeKeyToFile(pubKey, "publicKey")) {
-				fmt.Printf("Can not write Public Key")
+			p := keyToByte(pubKey)
+			if !(writeToFile(p, "publicKey")) {
+				fmt.Printf("Can not write Public Key\n")
 			}
-			if !(writeKeyToFile(privKey, "privateKey")) {
-				fmt.Printf("Can not write Private Key")
+			s := keyToByte(privKey)
+			if !(writeToFile(s, "privateKey")) {
+				fmt.Printf("Can not write Private Key\n")
 			}
 		}
 	}
 	// Encrypt message
 	//msg := "The quick brown fox jumps over the lazy dog"
 	if *enc {
-		encrypt(*publicKey, *privateKey, *msg)
+		message := readFile(*msg)
+		enc := encrypt(*publicKey, *privateKey, message)
+		if !(writeToFile(enc, *msg+".enc")) {
+			fmt.Printf("Can not write encrypted message\n")
+		}
 	}
 	// Decrypt message
 	if *dec {
-		decrypt(*publicKey, *privateKey, *msg)
+		message := readFile(*msg)
+		dec := decrypt(*publicKey, *privateKey, message)
+		if !(writeToFile(dec, "message.dec")) {
+			fmt.Printf("Can not write decrypted message\n")
+		}
 	}
 }
 
@@ -79,10 +89,15 @@ func readFile(f string) []byte {
 	// Read file
 	b, err := ioutil.ReadAll(file)
 	return b
-
 }
 
-func writeKeyToFile(k nacl.Key, n string) (ok bool) {
+func keyToByte(key nacl.Key) []byte {
+	// Convert key to bytes slice
+	b := []byte(key[:])
+	return b
+}
+
+func writeToFile(b []byte, n string) (ok bool) {
 	// Open a new file for writing only
 	file, err := os.OpenFile(
 		n,
@@ -93,8 +108,6 @@ func writeKeyToFile(k nacl.Key, n string) (ok bool) {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	// Convert key to bytes slice
-	b := []byte(k[:])
 	// Write bytes to file
 	_, err = file.Write(b)
 	if err != nil {
@@ -112,7 +125,7 @@ func genKeys() (publicKey, privateKey nacl.Key, err error) {
 	return
 }
 
-func encrypt(publicKey, privateKey, message string) {
+func encrypt(publicKey, privateKey string, message []byte) []byte {
 	/*
 		var nonce [24]byte
 		if _, err := io.ReadFull(crypto_rand.Reader, nonce[:]); err != nil {
@@ -125,43 +138,47 @@ func encrypt(publicKey, privateKey, message string) {
 	//fmt.Printf("Nonce: %s\n", base64.StdEncoding.EncodeToString([]byte(nonce[:])))
 
 	// Read Public Key
-    pk := readKeyFile(publicKey)
+	pk := readKeyFile(publicKey)
 	// Read Private Key
-    sk := readKeyFile(privateKey)
+	sk := readKeyFile(privateKey)
 
 	// Encrypt message
 	var out []byte
 	enc := box.Seal(out, []byte(message), nonce, pk, sk)
 	// Print crypted message (b64 encoding)
-    fmt.Printf("Decrypted message: %s\n", message)
+	fmt.Printf("Decrypted message: %s\n", message)
 	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
+	return enc
 }
 
-func decrypt(publicKey, privateKey, message string) {
+func decrypt(publicKey, privateKey string, message []byte) []byte {
 	/* If box.Open
-		var decNonce [24]byte
-		copy(decNonce[:], e[:24])
+	var decNonce [24]byte
+	copy(decNonce[:], e[:24])
 	*/
 
-    // Read Public Key
-    pk := readKeyFile(publicKey)
-    // Read Private Key
-    sk := readKeyFile(privateKey)
-    // Decode message
-	msg, err := base64.StdEncoding.DecodeString(message)
-    // Decrypt message
-	dec, err := box.EasyOpen([]byte(msg), pk, sk)
+	// Read Public Key
+	pk := readKeyFile(publicKey)
+	// Read Private Key
+	sk := readKeyFile(privateKey)
+	// Decode message
+	//fmt.Printf("b64 message: %s\n", message)
+	//msg, err := base64.StdEncoding.DecodeString(message)
+	//fmt.Printf("non encoded message: %q\n", msg)
+	// Decrypt message
+	dec, err := box.EasyOpen(message, pk, sk)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("Decrypted message: %s\n", base64.StdEncoding.EncodeToString(dec))
+	return dec
 }
 
-func readKeyFile (file string) (nacl.Key) {
-    // Read key
-    f := readFile(file)
-    // Transform keys from type []byte to nacl.Key
-    key := new([nacl.KeySize]byte)
-    copy(key[:], f)
-    return key
+func readKeyFile(file string) nacl.Key {
+	// Read key
+	f := readFile(file)
+	// Transform keys from type []byte to nacl.Key
+	key := new([nacl.KeySize]byte)
+	copy(key[:], f)
+	return key
 }
