@@ -40,31 +40,24 @@ func main() {
 			fmt.Printf("Private Key: %s\n", base64.StdEncoding.EncodeToString([]byte(privKey[:])))
 			// Write keys to file
 			p := keyToByte(pubKey)
-			if !(writeToFile(p, "publicKey")) {
-				fmt.Printf("Can not write Public Key\n")
-			}
+			writeToFile(p, "publicKey")
 			s := keyToByte(privKey)
-			if !(writeToFile(s, "privateKey")) {
-				fmt.Printf("Can not write Private Key\n")
-			}
+			writeToFile(s, "privateKey")
 		}
 	}
 	// Encrypt message
-	//msg := "The quick brown fox jumps over the lazy dog"
 	if *enc {
+		log.Printf("Encryption started\n")
 		message := readFile(*msg)
 		enc := encrypt(*publicKey, *privateKey, message)
-		if !(writeToFile(enc, *msg+".enc")) {
-			fmt.Printf("Can not write encrypted message\n")
-		}
+		writeToFile(enc, *msg+".enc")
 	}
 	// Decrypt message
 	if *dec {
+		log.Printf("Decryption started\n")
 		message := readFile(*msg)
 		dec := decrypt(*publicKey, *privateKey, message)
-		if !(writeToFile(dec, "message.dec")) {
-			fmt.Printf("Can not write decrypted message\n")
-		}
+		writeToFile(dec, *msg+".dec")
 	}
 }
 
@@ -97,7 +90,7 @@ func keyToByte(key nacl.Key) []byte {
 	return b
 }
 
-func writeToFile(b []byte, n string) (ok bool) {
+func writeToFile(b []byte, n string) {
 	// Open a new file for writing only
 	file, err := os.OpenFile(
 		n,
@@ -111,12 +104,10 @@ func writeToFile(b []byte, n string) (ok bool) {
 	// Write bytes to file
 	_, err = file.Write(b)
 	if err != nil {
-		ok = false
+		log.Printf("Can not write" + n + "\n")
 		log.Fatal(err)
 	}
-	ok = true
 	log.Printf("File writed: '%s'\n", n)
-	return
 }
 
 func genKeys() (publicKey, privateKey nacl.Key, err error) {
@@ -146,8 +137,8 @@ func encrypt(publicKey, privateKey string, message []byte) []byte {
 	var out []byte
 	enc := box.Seal(out, []byte(message), nonce, pk, sk)
 	// Print crypted message (b64 encoding)
-	fmt.Printf("Decrypted message: %s\n", message)
-	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
+	// fmt.Printf("Decrypted message: %s\n", message)
+	// fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
 	return enc
 }
 
