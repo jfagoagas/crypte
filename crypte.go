@@ -20,8 +20,8 @@ import (
 
 var (
 	keys       = flag.Bool("k", false, "Pub/Priv Key pair generator")
-	enc        = flag.Bool("e", false, "Encrypt and compress with lz4 a message")
-	dec        = flag.Bool("d", false, "Decrypt and decompress with lz4 a message")
+	enc        = flag.Bool("e", false, "Encrypt, sign and compress with lz4 a message")
+	dec        = flag.Bool("d", false, "Decrypt, verify sign adn decompress with lz4 a message")
 	publicKey  = flag.String("p", "", "Public Key File")
 	privateKey = flag.String("s", "", "Private Key File")
 	msg        = flag.String("m", "", "Message to encrypt/decrypt")
@@ -85,9 +85,9 @@ func usage() {
 	fmt.Printf("\nUsage:\n")
 	fmt.Println("- Generate Public/Private Keys:")
 	fmt.Printf("%s -k\n", os.Args[0])
-	fmt.Println("- Encrypt, sign and compress a message:")
+	fmt.Println("- Encrypt, sign and compress with lz4 a message")
 	fmt.Printf("%s -e -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
-	fmt.Println("- Decrypt, verify sign and decompress a message:")
+	fmt.Println("- Decrypt, verify sign and decompress with lz4  a message:")
 	fmt.Printf("%s -d -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
 	os.Exit(1)
 }
