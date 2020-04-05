@@ -1,9 +1,12 @@
 package main
 
-// incluir los errores en las devoluciones de las funciones
+/* To-Do
+- Return errors on functions
+*/
 
 import (
 	crypto_rand "crypto/rand"
+	//	compress "custom/compress"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -12,23 +15,28 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	//"bufio"
 )
 
 var (
 	keys       = flag.Bool("k", false, "Pub/Priv Key pair generator")
-	enc        = flag.Bool("e", false, "Encrypt message")
-	dec        = flag.Bool("d", false, "Decrypt message")
+	enc        = flag.Bool("e", false, "Encrypt and compress with lz4 a message")
+	dec        = flag.Bool("d", false, "Decrypt and decompress with lz4 a message")
 	publicKey  = flag.String("p", "", "Public Key File")
 	privateKey = flag.String("s", "", "Private Key File")
 	msg        = flag.String("m", "", "Message to encrypt/decrypt")
 )
 
 func main() {
+	// Print banner
+	banner()
 	// Flags config
 	flag.Usage = usage
 	flag.Parse()
-	//	usage()
-	// fmt.Printf("\nERROR - Must complete all input params\n")
+    if !*keys && !*enc && !*dec {
+		fmt.Printf("\nERROR - Must complete all input params\n")
+		usage()
+	}
 	// Public/Private keys generation
 	if *keys {
 		pubKey, privKey, err := genKeys()
@@ -39,6 +47,9 @@ func main() {
 			fmt.Printf("Public Key: %s\n", base64.StdEncoding.EncodeToString([]byte(pubKey[:])))
 			fmt.Printf("Private Key: %s\n", base64.StdEncoding.EncodeToString([]byte(privKey[:])))
 			// Write keys to file
+			//fmt.Println("Enter file in which to save the key (Default: (public/private)Key)")
+			//reader := bufio.NewReader(os.Stdin)
+			//line, _ := reader.ReadString('\n')
 			p := keyToByte(pubKey)
 			writeToFile(p, "publicKey")
 			s := keyToByte(privKey)
@@ -49,6 +60,8 @@ func main() {
 	if *enc {
 		log.Printf("Encryption started\n")
 		message := readFile(*msg)
+		// compress message
+		//message_c := compress.Compress(message)
 		enc := encrypt(*publicKey, *privateKey, message)
 		writeToFile(enc, *msg+".enc")
 	}
@@ -57,17 +70,24 @@ func main() {
 		log.Printf("Decryption started\n")
 		message := readFile(*msg)
 		dec := decrypt(*publicKey, *privateKey, message)
+		// decompress message
+		//message_d := compress.Decompress(dec)
 		writeToFile(dec, *msg+".dec")
 	}
+}
+
+func banner() {
+	fmt.Println("## Crypte ##")
+	fmt.Printf("Tool for (de)compress and (de)crypt message\n\n")
 }
 
 func usage() {
 	fmt.Printf("\nUsage:\n")
 	fmt.Println("- Generate Public/Private Keys:")
 	fmt.Printf("%s -k\n", os.Args[0])
-	fmt.Println("- Encrypt message:")
+	fmt.Println("- Encrypt, sign and compress a message:")
 	fmt.Printf("%s -e -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
-	fmt.Println("- Decrypt message:")
+	fmt.Println("- Decrypt, verify sign and decompress a message:")
 	fmt.Printf("%s -d -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
 	os.Exit(1)
 }
@@ -117,45 +137,24 @@ func genKeys() (publicKey, privateKey nacl.Key, err error) {
 }
 
 func encrypt(publicKey, privateKey string, message []byte) []byte {
-	/*
-		var nonce [24]byte
-		if _, err := io.ReadFull(crypto_rand.Reader, nonce[:]); err != nil {
-			panic(err)
-		}
-	*/
-
-	// Random nonce (var nonce [24]byte)
-	nonce := nacl.NewNonce()
-	//fmt.Printf("Nonce: %s\n", base64.StdEncoding.EncodeToString([]byte(nonce[:])))
-
 	// Read Public Key
 	pk := readKeyFile(publicKey)
 	// Read Private Key
 	sk := readKeyFile(privateKey)
-
 	// Encrypt message
-	var out []byte
-	enc := box.Seal(out, []byte(message), nonce, pk, sk)
+	enc := box.EasySeal([]byte(message), pk, sk)
 	// Print crypted message (b64 encoding)
-	// fmt.Printf("Decrypted message: %s\n", message)
-	// fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
+	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
 	return enc
 }
 
 func decrypt(publicKey, privateKey string, message []byte) []byte {
-	/* If box.Open
-	var decNonce [24]byte
-	copy(decNonce[:], e[:24])
-	*/
-
 	// Read Public Key
 	pk := readKeyFile(publicKey)
 	// Read Private Key
 	sk := readKeyFile(privateKey)
 	// Decode message
-	//fmt.Printf("b64 message: %s\n", message)
-	//msg, err := base64.StdEncoding.DecodeString(message)
-	//fmt.Printf("non encoded message: %q\n", msg)
+	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(message))
 	// Decrypt message
 	dec, err := box.EasyOpen(message, pk, sk)
 	if err != nil {
