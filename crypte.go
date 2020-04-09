@@ -144,7 +144,7 @@ func encrypt(publicKey, privateKey string, message []byte) []byte {
 	// Encrypt message
 	enc := box.EasySeal([]byte(message), pk, sk)
 	// Print crypted message (b64 encoding)
-	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
+	//fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
 	return enc
 }
 
@@ -160,7 +160,8 @@ func decrypt(publicKey, privateKey string, message []byte) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Decrypted message: %s\n", base64.StdEncoding.EncodeToString(dec))
+    // Print decrypted message
+    //fmt.Printf("Decrypted message: %s\n", string(dec))
 	return dec
 }
 
