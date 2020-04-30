@@ -17,6 +17,7 @@ package main
 
 /* To-Do
 - Return errors on functions
+- Write key to a custom file
 */
 
 import (
