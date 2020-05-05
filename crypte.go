@@ -28,7 +28,6 @@ import (
 	"fmt"
 	nacl "github.com/kevinburke/nacl"
 	box "github.com/kevinburke/nacl/box"
-	"io/ioutil"
 	"log"
 	"os"
 	//"bufio"
@@ -49,7 +48,7 @@ func main() {
 	// Flags config
 	flag.Usage = usage
 	flag.Parse()
-    if !*keys && !*enc && !*dec {
+	if !*keys && !*enc && !*dec {
 		fmt.Printf("\nERROR - Must complete all input params\n")
 		usage()
 	}
@@ -108,44 +107,6 @@ func usage() {
 	os.Exit(1)
 }
 
-func readFile(f string) []byte {
-	// Open file
-	file, err := os.Open(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	// Read file
-	b, err := ioutil.ReadAll(file)
-	return b
-}
-
-func keyToByte(key nacl.Key) []byte {
-	// Convert key to bytes slice
-	b := []byte(key[:])
-	return b
-}
-
-func writeToFile(b []byte, n string) {
-	// Open a new file for writing only
-	file, err := os.OpenFile(
-		n,
-		os.O_WRONLY|os.O_TRUNC|os.O_CREATE,
-		0600,
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	// Write bytes to file
-	_, err = file.Write(b)
-	if err != nil {
-		log.Printf("Can not write" + n + "\n")
-		log.Fatal(err)
-	}
-	log.Printf("File writed: '%s'\n", n)
-}
-
 func genKeys() (publicKey, privateKey nacl.Key, err error) {
 	// Generate Public/Private Keys
 	publicKey, privateKey, err = box.GenerateKey(crypto_rand.Reader)
@@ -176,16 +137,7 @@ func decrypt(publicKey, privateKey string, message []byte) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-    // Print decrypted message
-    //fmt.Printf("Decrypted message: %s\n", string(dec))
+	// Print decrypted message
+	//fmt.Printf("Decrypted message: %s\n", string(dec))
 	return dec
-}
-
-func readKeyFile(file string) nacl.Key {
-	// Read key
-	f := readFile(file)
-	// Transform keys from type []byte to nacl.Key
-	key := new([nacl.KeySize]byte)
-	copy(key[:], f)
-	return key
 }
