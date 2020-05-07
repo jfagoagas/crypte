@@ -75,18 +75,18 @@ func main() {
 	if *enc {
 		log.Printf("Encryption started\n")
 		message := readFile(*msg)
-		// compress message
-		//message_c := compress.Compress(message)
 		enc := encrypt(*publicKey, *privateKey, message)
+		// compress message
+		// message_c := compress(enc)
 		writeToFile(enc, *msg+".enc")
 	}
 	// Decrypt message
 	if *dec {
 		log.Printf("Decryption started\n")
 		message := readFile(*msg)
-		dec := decrypt(*publicKey, *privateKey, message)
 		// decompress message
-		//message_d := compress.Decompress(dec)
+		// message_d := decompress(message)
+		dec := decrypt(*publicKey, *privateKey, message)
 		writeToFile(dec, *msg+".dec")
 	}
 }
@@ -121,7 +121,7 @@ func encrypt(publicKey, privateKey string, message []byte) []byte {
 	// Encrypt message
 	enc := box.EasySeal([]byte(message), pk, sk)
 	// Print crypted message (b64 encoding)
-	//fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
+	// fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(enc))
 	return enc
 }
 
@@ -131,13 +131,13 @@ func decrypt(publicKey, privateKey string, message []byte) []byte {
 	// Read Private Key
 	sk := readKeyFile(privateKey)
 	// Decode message
-	fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(message))
+	// fmt.Printf("Encrypted message: %s\n", base64.StdEncoding.EncodeToString(message))
 	// Decrypt message
 	dec, err := box.EasyOpen(message, pk, sk)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// Print decrypted message
-	//fmt.Printf("Decrypted message: %s\n", string(dec))
+	// fmt.Printf("Decrypted message: %s\n", string(dec))
 	return dec
 }
