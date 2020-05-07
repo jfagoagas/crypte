@@ -13,7 +13,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-onl
 
-package compress
+package main 
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ import (
 	"log"
 )
 
-func Compress(data []byte) []byte {
+func compress(data []byte) []byte {
 	buf := make([]byte, len(data))
 	ht := make([]int, 64<<10) // buffer for the compression table, 64KB
 	n, err := lz4.CompressBlock(data, buf, ht)
@@ -37,7 +37,7 @@ func Compress(data []byte) []byte {
     return buf
 }
 
-func Decompress(data []byte) []byte {
+func decompress(data []byte) []byte {
     // Allocated a very large buffer for decompression.
     out := make([]byte, 10*len(data))
     n, err := lz4.UncompressBlock(data, out)
