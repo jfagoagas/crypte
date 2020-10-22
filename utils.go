@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 //
-// SPDX-License-Identifier: GPL-3.0-onl
+// SPDX-License-Identifier: GPL-3.0-only
 
 package main
 
@@ -29,9 +29,17 @@ func readFile(f string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	// Read file
 	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return b
 }
 
@@ -63,7 +71,12 @@ func writeToFile(b []byte, n string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	// Write bytes to file
 	_, err = file.Write(b)
 	if err != nil {

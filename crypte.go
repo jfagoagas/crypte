@@ -11,7 +11,7 @@
 // You should have received a copy of the GNU General Public License along with
 // this program. If not, see <https://www.gnu.org/licenses/>.
 //
-// SPDX-License-Identifier: GPL-3.0-onl
+// SPDX-License-Identifier: GPL-3.0-only
 
 package main
 
@@ -22,7 +22,6 @@ package main
 
 import (
 	crypto_rand "crypto/rand"
-	//	compress "custom/compress"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -30,7 +29,6 @@ import (
 	box "github.com/kevinburke/nacl/box"
 	"log"
 	"os"
-	//"bufio"
 )
 
 var (
