@@ -99,11 +99,11 @@ func banner() {
 func usage() {
 	fmt.Printf("\nUsage:\n")
 	fmt.Println("- Generate Public/Private Keys:")
-	fmt.Printf("%s -k\n", os.Args[0])
+	fmt.Println("crypte -k")
 	fmt.Println("\n- Encrypt, sign and compress with lz4 a message")
-	fmt.Printf("%s -e -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
+	fmt.Println("crypte -e -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>")
 	fmt.Println("\n- Decrypt, verify sign and decompress with lz4  a message:")
-	fmt.Printf("%s -d -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
+	fmt.Println("crypte -d -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>")
 	os.Exit(1)
 }
 
