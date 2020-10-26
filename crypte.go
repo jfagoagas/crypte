@@ -73,34 +73,36 @@ func main() {
 	if *enc {
 		log.Printf("Encryption started\n")
 		message := readFile(*msg)
-		enc := encrypt(*publicKey, *privateKey, message)
-		// compress message
-		// message_c := compress(enc)
+        // compress message
+        messageCompressed := compress(message)
+        // encrypt message
+		enc := encrypt(*publicKey, *privateKey, messageCompressed)
 		writeToFile(enc, *msg+".enc")
 	}
 	// Decrypt message
 	if *dec {
 		log.Printf("Decryption started\n")
 		message := readFile(*msg)
+        // decrypt message
+        dec := decrypt(*publicKey, *privateKey, message)
 		// decompress message
-		// message_d := decompress(message)
-		dec := decrypt(*publicKey, *privateKey, message)
-		writeToFile(dec, *msg+".dec")
+		messageDecompressed := decompress(dec)
+		writeToFile(messageDecompressed, *msg+".dec")
 	}
 }
 
 func banner() {
 	fmt.Println("## Crypte ##")
-	fmt.Printf("Tool for (de)compress and (de)crypt message\n\n")
+	fmt.Printf("Tool for (de)compress and (de)crypt message using NaCl anf lz4\n")
 }
 
 func usage() {
 	fmt.Printf("\nUsage:\n")
 	fmt.Println("- Generate Public/Private Keys:")
 	fmt.Printf("%s -k\n", os.Args[0])
-	fmt.Println("- Encrypt, sign and compress with lz4 a message")
+	fmt.Println("\n- Encrypt, sign and compress with lz4 a message")
 	fmt.Printf("%s -e -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
-	fmt.Println("- Decrypt, verify sign and decompress with lz4  a message:")
+	fmt.Println("\n- Decrypt, verify sign and decompress with lz4  a message:")
 	fmt.Printf("%s -d -p <PublicKeyFile> -s <PrivateKeyFile> -m <Message>\n", os.Args[0])
 	os.Exit(1)
 }
